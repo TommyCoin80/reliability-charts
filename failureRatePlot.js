@@ -43,8 +43,9 @@ function failureRatePlot(selector, data, options = {}) {
     .domain([0, d3.max(data, d => d.day)])
     .range([0, W]);
 
+  const yMax = d3.max(data, d => d.hi ?? d.p);
   const y = d3.scaleLinear()
-    .domain([0, 1])
+    .domain([0, yMax * 1.1])
     .range([H, 0])
     .nice();
 
