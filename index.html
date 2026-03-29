@@ -107,16 +107,7 @@
 </head>
 <body>
 
-<div class="card">
-  <div class="header">
-    <h1>Failure Probability Over Time</h1>
-    <p>Component reliability degradation by group · 95% confidence interval</p>
-  </div>
-  <div id="chart"></div>
-  <div class="legend" id="legend"></div>
-</div>
-
-<div class="tooltip" id="tooltip"></div>
+<div id="app"></div>
 
 <script>
   // ── Colour palette (add more entries to support more groups) ──────────────
@@ -201,7 +192,7 @@
     group: d.group,
   }));
 
-  failureRatePlot("#chart", data);
+  failureRatePlot("#app", data);
 
 </script>
 </body>

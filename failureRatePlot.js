@@ -1,25 +1,33 @@
 // ── Plot factory ──────────────────────────────────────────────────────────
 function failureRatePlot(selector, data, options = {}) {
   const {
-    palette         = PALETTE,
-    tooltipSelector = "#tooltip",
-    legendSelector  = "#legend",
-    margin          = { top: 24, right: 32, bottom: 44, left: 56 },
-    totalW          = 780,
-    totalH          = 380,
-    title           = null,
-    subtitle        = null,
-    xLabel          = "Days",
-    yLabel          = "Failure Probability",
-    stepCurve       = false,
+    palette   = PALETTE,
+    margin    = { top: 24, right: 32, bottom: 44, left: 56 },
+    totalW    = 780,
+    totalH    = 380,
+    title     = "Failure Probability Over Time",
+    subtitle  = "Component reliability degradation by group · 95% confidence interval",
+    xLabel    = "Days",
+    yLabel    = "Failure Probability",
+    stepCurve = false,
   } = options;
 
-  // Update header text if overrides provided
-  if (title)    document.querySelector(".header h1").textContent = title;
-  if (subtitle) document.querySelector(".header p").textContent  = subtitle;
+  // ── Create DOM structure inside the selected container ───────────────────
+  const container = d3.select(selector);
 
-  // Group by the `group` key (works with any set of groups present in data)
-  const grouped = d3.group(data, d => d.group);
+  const card = container.append("div").attr("class", "card");
+
+  const headerEl = card.append("div").attr("class", "header");
+  headerEl.append("h1").text(title);
+  headerEl.append("p").text(subtitle);
+
+  const chartDiv = card.append("div");
+  const legendEl = card.append("div").attr("class", "legend");
+
+  const tooltip = container.append("div").attr("class", "tooltip");
+
+  // ── Group data ───────────────────────────────────────────────────────────
+  const grouped  = d3.group(data, d => d.group);
   const groupKeys = [...grouped.keys()];
 
   // Resolve colour — fall back to a generated hue if group not in palette
@@ -30,8 +38,7 @@ function failureRatePlot(selector, data, options = {}) {
   const W = totalW - margin.left - margin.right;
   const H = totalH - margin.top - margin.bottom;
 
-  const svg = d3.select(selector)
-    .append("svg")
+  const svg = chartDiv.append("svg")
     .attr("width", totalW)
     .attr("height", totalH);
 
@@ -151,9 +158,8 @@ function failureRatePlot(selector, data, options = {}) {
     .attr("stroke-dasharray", "3,3")
     .style("opacity", 0);
 
-  const tooltip = d3.select(tooltipSelector);
-  const bisect  = d3.bisector(d => d.day).left;
-  const pct     = v => `${(v * 100).toFixed(1)}%`;
+  const bisect = d3.bisector(d => d.day).left;
+  const pct    = v => `${(v * 100).toFixed(1)}%`;
 
   g.append("rect")
     .attr("width", W).attr("height", H)
@@ -207,15 +213,11 @@ function failureRatePlot(selector, data, options = {}) {
     });
 
   // ── Legend (dynamic) ─────────────────────────────────────────────────────
-  const legendEl = document.querySelector(legendSelector);
-
   groupKeys.forEach(key => {
     const c = color(key);
-    legendEl.innerHTML += `
-      <div class="legend-item">
-        <div class="legend-line" style="background:${c};"></div>
-        Group ${key}
-      </div>`;
+    legendEl.append("div")
+      .attr("class", "legend-item")
+      .html(`<div class="legend-line" style="background:${c};"></div>Group ${key}`);
   });
 
   return svg;
