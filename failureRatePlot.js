@@ -11,6 +11,7 @@ function failureRatePlot(selector, data, options = {}) {
     subtitle        = null,
     xLabel          = "Days",
     yLabel          = "Failure Probability",
+    stepCurve       = false,
   } = options;
 
   // Update header text if overrides provided
@@ -80,16 +81,18 @@ function failureRatePlot(selector, data, options = {}) {
     .text(yLabel);
 
   // ── Path generators ─────────────────────────────────────────────────────
+  const curve = stepCurve ? d3.curveStepAfter : d3.curveCatmullRom.alpha(0.5);
+
   const areaGen = d3.area()
     .x(d  => x(d.day))
     .y0(d => y(d.lo))
     .y1(d => y(d.hi))
-    .curve(d3.curveCatmullRom.alpha(0.5));
+    .curve(curve);
 
   const lineGen = field => d3.line()
     .x(d => x(d.day))
     .y(d => y(d[field]))
-    .curve(d3.curveCatmullRom.alpha(0.5));
+    .curve(curve);
 
   // ── Draw one series per group ────────────────────────────────────────────
   groupKeys.forEach(key => {
