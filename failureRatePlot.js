@@ -1,15 +1,19 @@
 // ── Plot factory ──────────────────────────────────────────────────────────
 function failureRatePlot(selector, data, options = {}) {
+  const ciDetected = data.some(d => d.lo != null);
   const {
     palette   = PALETTE,
     margin    = { top: 24, right: 32, bottom: 44, left: 56 },
     totalW    = 780,
     totalH    = 380,
     title     = "Failure Probability Over Time",
-    subtitle  = "Component reliability degradation by group · 95% confidence interval",
+    subtitle  = ciDetected
+      ? "Component reliability degradation by group · 95% confidence interval"
+      : "Component reliability degradation by group",
     xLabel    = "Days",
     yLabel    = "Failure Probability",
     stepCurve = false,
+    showCI    = ciDetected,
   } = options;
 
   // ── Create DOM structure inside the selected container ───────────────────
@@ -107,21 +111,23 @@ function failureRatePlot(selector, data, options = {}) {
     const series = grouped.get(key);
     const c = color(key);
 
-    // CI band
-    g.append("path")
-      .datum(series)
-      .attr("class", "ci-band")
-      .attr("fill", c)
-      .attr("d", areaGen);
-
-    // CI boundary lines
-    ["hi", "lo"].forEach(field => {
+    if (showCI) {
+      // CI band
       g.append("path")
         .datum(series)
-        .attr("class", field === "hi" ? "ci-upper" : "ci-lower")
-        .attr("stroke", c)
-        .attr("d", lineGen(field)(series));
-    });
+        .attr("class", "ci-band")
+        .attr("fill", c)
+        .attr("d", areaGen);
+
+      // CI boundary lines
+      ["hi", "lo"].forEach(field => {
+        g.append("path")
+          .datum(series)
+          .attr("class", field === "hi" ? "ci-upper" : "ci-lower")
+          .attr("stroke", c)
+          .attr("d", lineGen(field)(series));
+      });
+    }
 
     // Main line with draw animation
     const mainPath = g.append("path")
@@ -195,7 +201,7 @@ function failureRatePlot(selector, data, options = {}) {
             <span class="t-label">Group ${key}</span>
             <span class="t-val" style="color:${c};">${pct(d.p)}</span>
           </div>
-          <div class="t-ci">95% CI: ${pct(d.lo)} – ${pct(d.hi)}</div>
+          ${showCI ? `<div class="t-ci">95% CI: ${pct(d.lo)} – ${pct(d.hi)}</div>` : ''}
         `;
       }).join('<hr class="t-sep">');
 
